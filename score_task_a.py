@@ -1,64 +1,93 @@
 import os
+import sys
+import torch
+import numpy as np
+from PIL import Image
 import cv2
 from tqdm import tqdm
-from deepface import DeepFace
 from sklearn.metrics import classification_report
+from torch.utils.data import Dataset, DataLoader
+import torchvision.transforms as T
+from transformers import CLIPProcessor, CLIPModel
 
-def load_data(data_dir):
-    data = {'male': [], 'female': []}
-    for gender in ['male', 'female']:
-        gender_dir = os.path.join(data_dir, gender)
-        for fname in os.listdir(gender_dir):
-            data[gender].append(os.path.join(gender_dir, fname))
-    return data
+# ------------- Face Dataset -----------------
+class FaceDataset(Dataset):
+    def __init__(self, root_dir, processor, transform=None):
+        self.processor = processor
+        self.transform = transform
+        self.data = []
 
-def preprocess_faces(data, target_size=(112, 112)):
-    def lighting_normalization(img):
-        lab = cv2.cvtColor(img, cv2.COLOR_RGB2LAB)
-        l, a, b = cv2.split(lab)
-        clahe = cv2.createCLAHE(clipLimit=2.0, tileGridSize=(8,8))
-        l = clahe.apply(l)
-        lab = cv2.merge((l, a, b))
-        return cv2.cvtColor(lab, cv2.COLOR_LAB2RGB)
+        for label, class_name in enumerate(['male', 'female']):
+            class_dir = os.path.join(root_dir, class_name)
+            for img_name in os.listdir(class_dir):
+                if img_name.lower().endswith(('.png', '.jpg', '.jpeg')):
+                    self.data.append((os.path.join(class_dir, img_name), label))
 
-    def denoise(img):
-        return cv2.fastNlMeansDenoisingColored(img, None, h=10, hColor=10, templateWindowSize=7, searchWindowSize=21)
+    def __len__(self):
+        return len(self.data)
 
-    processed = {}
-    for person in data:
-        images = data[person]
-        processed_images = []
-        for img_path in tqdm(images, desc=f"Preprocessing {person}"):
-            img = cv2.imread(img_path)
-            img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
-            img = denoise(img)
-            img = lighting_normalization(img)
-            img = cv2.resize(img, target_size)
-            processed_images.append(img)
-        processed[person] = processed_images
-    return processed
+    def __getitem__(self, idx):
+        img_path, label = self.data[idx]
+        image = cv2.imread(img_path)
+        image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
+        image = cv2.fastNlMeansDenoisingColored(image, None, 10, 10, 7, 21)
+        image = Image.fromarray(image)
 
+        if self.transform:
+            image = self.transform(image)
+
+        inputs = self.processor(images=image, return_tensors="pt")
+        pixel_values = inputs["pixel_values"].squeeze(0)
+        return pixel_values, torch.tensor(label)
+
+# ------------- Model -----------------
+class GenderClassifier(torch.nn.Module):
+    def __init__(self):
+        super().__init__()
+        self.clip = CLIPModel.from_pretrained("openai/clip-vit-base-patch32")
+        with torch.no_grad():
+            dummy = torch.randn(1, 3, 224, 224)
+            feature_dim = self.clip.get_image_features(pixel_values=dummy).shape[1]
+        self.classifier = torch.nn.Linear(feature_dim, 2)
+
+    def forward(self, pixel_values):
+        features = self.clip.get_image_features(pixel_values=pixel_values)
+        return self.classifier(features)
+
+# ------------- Main Evaluation Logic -----------------
+def evaluate(val_dir, model_path):
+    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+    processor = CLIPProcessor.from_pretrained("openai/clip-vit-base-patch32")
+
+    transform = T.Compose([T.Resize((224, 224))])
+    val_dataset = FaceDataset(val_dir, processor, transform)
+    val_loader = DataLoader(val_dataset, batch_size=16)
+
+    # Instantiate the model and load weights
+    model = GenderClassifier().to(device)
+    state_dict = torch.load(model_path, map_location=device)
+    model.load_state_dict(state_dict)
+    model.eval()
+
+    all_preds, all_labels = [], []
+    with torch.no_grad():
+        for pixel_values, labels in tqdm(val_loader, desc="Evaluating"):
+            pixel_values = pixel_values.to(device)
+            labels = labels.to(device)
+            logits = model(pixel_values)
+            preds = torch.argmax(logits, dim=1)
+            all_preds.extend(preds.cpu().numpy())
+            all_labels.extend(labels.cpu().numpy())
+
+    print("\n📊 Classification Report:")
+    print(classification_report(all_labels, all_preds, target_names=["Male", "Female"]))
+
+# ------------- Script Entry Point -----------------
 if __name__ == "__main__":
-    import sys
-    if len(sys.argv) != 2:
-        print("Usage: python score_task_a.py <val_folder_path>")
+    if len(sys.argv) != 3:
+        print("Usage: python score_task_a.py <val_dir> <model_path>")
         sys.exit(1)
 
-    val_path = sys.argv[1]
-    data = load_data(val_path)
-
-    y_true, y_pred = [], []
-
-    for label in ['female', 'male']:
-        for img_path in tqdm(data[label], desc=f"Predicting {label}"):
-            try:
-                gender_pred = DeepFace.analyze(img_path=img_path, actions=["gender"], detector_backend='skip')[0]['gender']
-                predicted = 'female' if gender_pred['Woman'] > gender_pred['Man'] else 'male'
-                y_true.append(label)
-                y_pred.append(predicted)
-            except Exception as e:
-                print(f"Error with {img_path}: {e}")
-                continue
-
-    print("\n📊 Gender Classification Report:")
-    print(classification_report(y_true, y_pred, digits=4))
+    val_dir = sys.argv[1]
+    model_path = sys.argv[2]
+    evaluate(val_dir, model_path)
