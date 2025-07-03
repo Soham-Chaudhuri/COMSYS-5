@@ -19,7 +19,7 @@ Required config files:
 
 [Download Face Embeddings from Google Drive](https://drive.google.com/file/d/1ObtkkYKOJGIJucQQTOQF7R_G9tOU7NLz/view?usp=sharing)
 
-[Download Gender model weights from Google Drive](https://drive.google.com/file/d/1A2uyjeNqPE1yJQTqSSCDEKORDOGF26Kj/view?usp=sharing)
+[Download Gender model weights from Google Drive](https://drive.google.com/file/d/10WenJR1PqJGp_stcZkEERY7AxE1v231f/view?usp=sharing)
 
 [Download ArcFace model weights from Google Drive](https://drive.google.com/file/d/1p7LM_NhbGcf6eff-2pdmuZn83nIx7XSs/view?usp=sharing)
 
