@@ -43,7 +43,7 @@ val_task_a/
 ```
 
 ```bash
-python score_task_a.py --val_path ./val_task_a
+python score_task_a.py --val_path ./val_task_a --weights_path ./saved_model/model_weights.pt
 ```
 
 ## 🧠 Task B – Face Recognition
