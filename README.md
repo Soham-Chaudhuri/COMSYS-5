@@ -92,3 +92,6 @@ python score_task_b.py --val_path ./val_task_b --collection faces_collection.jso
 
 
 Here, the recognized stands for the images that are from the FaceCOM dataset and not_recognized for the images not present in FaceCOM. Results where generated for 1000 images on the training and validation set respectively.
+
+
+For a detailed System Description see : [System Description](assets/The_Attention_Seekers.pdf)
