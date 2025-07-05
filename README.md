@@ -28,7 +28,7 @@ Required config files:
 ## 🧠 Task A – Gender Classification
 
 We used the **CLIP (Contrastive Language-Image Pretraining) ViT-B/32 model** to extract image features then apply an MLP head to classify the gender of the person in the images.
-![Model Architecture](assets/CLIP_Gender_Classification.drawio.png)
+![Model Architecture](assets/CLIP_Gender_Classification.png)
 
 We have provided our training jupyter notebook **clip-genderclassification.ipynb** which has the validation result and the training result is provided in the **taska-scoregenerator.ipynb**.
 
