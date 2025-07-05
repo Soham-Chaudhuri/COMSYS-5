@@ -28,13 +28,14 @@ Required config files:
 ## 🧠 Task A – Gender Classification
 
 We used the **CLIP (Contrastive Language-Image Pretraining) ViT-B/32 model** to extract image features then apply an MLP head to classify the gender of the person in the images.
+
 ![Model Architecture](assets/CLIP_Gender_Classification.png)
 
 We have provided our training jupyter notebook **clip-genderclassification.ipynb** which has the validation result and the training result is provided in the **taska-scoregenerator.ipynb**.
 
 We have also made a separate **score_task_a.py** which can be used a tool to classify images. To classify images using the scorer file a sample Test folder structure is given below and also in the repo.
 
-### 📁 Validation Folder Structure
+### 📁 Test Folder Structure
 ```
 
 val_task_a/
@@ -56,11 +57,20 @@ python score_task_a.py --val_path ./val_task_a --weights_path ./saved_model/mode
 
 ### Results
 ![Task A Training Result](assets/task_a_train.png)
-![Task B Validation Result](assets/task_a_val.png)
+![Task A Validation Result](assets/task_a_val.png)
 
 ## 🧠 Task B – Face Recognition
 
-### 📁 Validation Folder Structure
+We used a retriever model based on **ArcFace Face Embeddings** and vectorDB **ChromaDB** to make the Face Recognition model.
+
+![Model Architecture](assets/task_b.drawio.png)
+
+We have also provided with model development jupyter notebook **task_B_dev.ipynb**. We have used the ArcFace model through the **DeepFace** package's interface and stored all the face embeddings in ChromaDB with labels as metadata.
+
+We have provided the **faces_collection.json** in gdrive which has the embeddings collection. **score_task_b.py** can be used to do face recognition based on FaceCOM dataset.
+
+
+### 📁 Test Folder Structure
 
 ```
 val_task_b/
@@ -76,4 +86,6 @@ val_task_b/
 python score_task_b.py --val_path ./val_task_b --collection faces_collection.json
 ```
 
-
+### Results
+![Task B Training Result](assets/task_b_train.png)
+![Task B Validation Result](assets/task_b_val.png)
