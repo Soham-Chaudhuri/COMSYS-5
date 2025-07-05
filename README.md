@@ -27,6 +27,13 @@ Required config files:
 
 ## 🧠 Task A – Gender Classification
 
+We used the **CLIP (Contrastive Language-Image Pretraining) ViT-B/32 model** to extract image features then apply an MLP head to classify the gender of the person in the images.
+![Model Architecture](assets/CLIP_Gender Classification.drawio.png)
+
+We have provided our training jupyter notebook **clip-genderclassification.ipynb** which has the validation result and the training result is provided in the **taska-scoregenerator.ipynb**.
+
+We have also made a separate **score_task_a.py** which can be used a tool to classify images. To classify images using the scorer file a sample Test folder structure is given below and also in the repo.
+
 ### 📁 Validation Folder Structure
 ```
 
@@ -41,10 +48,15 @@ val_task_a/
 │   └── ...
 
 ```
+After having the above folder structure download the **model_weights.pt** from gdrive and use the below command line prompt to run the scorer.
 
 ```bash
 python score_task_a.py --val_path ./val_task_a --weights_path ./saved_model/model_weights.pt
 ```
+
+### Results
+![Task A Training Result](assets/task_a_train.png)
+![Task B Validation Result](assets/task_a_val.png)
 
 ## 🧠 Task B – Face Recognition
 
