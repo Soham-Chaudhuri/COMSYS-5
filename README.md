@@ -63,7 +63,7 @@ python score_task_a.py --val_path ./val_task_a --weights_path ./saved_model/mode
 
 We used a retriever model based on **ArcFace Face Embeddings** and vectorDB **ChromaDB** to make the Face Recognition model.
 
-![Model Architecture](assets/task_b.drawio.png)
+![Model Architecture](assets/task_b_2.drawio.png)
 
 We have also provided with model development jupyter notebook **task_B_dev.ipynb**. We have used the ArcFace model through the **DeepFace** package's interface and stored all the face embeddings in ChromaDB with labels as metadata.
 
@@ -89,3 +89,6 @@ python score_task_b.py --val_path ./val_task_b --collection faces_collection.jso
 ### Results
 ![Task B Training Result](assets/task_b_train.png)
 ![Task B Validation Result](assets/task_b_val.png)
+
+
+Here, the recognized stands for the images that are from the FaceCOM dataset and not_recognized for the images not present in FaceCOM. Results where generated for 1000 images on the training and validation set respectively.
